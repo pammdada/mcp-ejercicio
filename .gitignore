@@ -1,0 +1,15 @@
+# Ignorar todo por defecto
+*
+
+# Permitir archivos .py
+!*.py
+
+# Permitir carpetas (para buscar archivos .py dentro)
+!*/
+
+# Permitir el propio .gitignore
+!.gitignore
+
+# Opcional: permitir pyproject.toml
+!pyproject.toml
+
