@@ -7,22 +7,6 @@ from typing import Optional, Dict, Any, Tuple, Union
 logger = logging.getLogger(__name__)
 
 class MCPClient:
-    """
-    Cliente para interactuar con servidores MCP (Model Control Protocol).
-    
-    Este cliente permite establecer una conexión con un servidor MCP,
-    listar las herramientas disponibles y ejecutarlas.
-    
-    Ejemplo de uso:
-        ```python
-        async with MCPClient("node", ["path/to/server.js"]) as client:
-            tools = await client.list_tools()
-            print(tools)
-            
-            result = await client.execute_tool("tool_name", {"arg1": "value1"})
-            print(result)
-        ```
-    """
     
     def __init__(self, command: str, args: list[str], env: Optional[Dict[str, str]] = None):
         """
@@ -52,9 +36,14 @@ class MCPClient:
             bool: True si la conexión fue exitosa, False en caso contrario
         """
         try:
+            # gestor de contexto para la comunicacion por stdio, en server_parms esta la  configuracion
             self._client_ctx = stdio_client(self.server_params)
+            #inicializar el recurso
             client = await self._client_ctx.__aenter__()
+            #permiten enviar y recibir bytes
             self.read, self.write = client
+
+            #
             self._session_ctx = ClientSession(self.read, self.write)
             self.session = await self._session_ctx.__aenter__()
             await self.session.initialize()
@@ -72,7 +61,9 @@ class MCPClient:
     async def disconnect(self) -> None:
         """Cierra la conexión con el servidor MCP"""
         try:
+            #verifica si hay una sesion activa
             if self._session_ctx:
+                #"NONE le dice que fue una salida normal y no un error"
                 await self._session_ctx.__aexit__(None, None, None)
                 self._session_ctx = None
                 self.session = None
@@ -150,7 +141,7 @@ class MCPClient:
         except Exception as e:
             logger.error(f"Error al ejecutar herramienta {tool_name}: {e}")
             raise
-
+#inicia la conexion
     async def __aenter__(self) -> 'MCPClient':
         """Soporte para context manager asíncrono (async with)"""
         success = await self.connect()
